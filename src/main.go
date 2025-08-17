@@ -44,11 +44,11 @@ type TraversableDirectory struct {
 	currentDirectory string
 }
 
-func (dirModel TraversableDirectory) Init() tea.Cmd {
+func (dirModel *TraversableDirectory) Init() tea.Cmd {
 	return nil
 }
 
-func (dirModel TraversableDirectory) View() string {
+func (dirModel *TraversableDirectory) View() string {
 	view := fmt.Sprintf("Current Directory: %s\n\n", dirModel.currentDirectory)
 
 	// only print current directory for now
@@ -63,7 +63,7 @@ func (dirModel TraversableDirectory) View() string {
 	return view
 }
 
-func (dirModel TraversableDirectory) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (dirModel *TraversableDirectory) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -75,7 +75,7 @@ func (dirModel TraversableDirectory) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return dirModel, nil
 }
 
-func NewTraversableDirectory(cwd string) TraversableDirectory {
+func NewTraversableDirectory(cwd string) *TraversableDirectory {
 	rawDirectoryContents, err := os.ReadDir(cwd)
 	if err != nil {
 		fmt.Println("Error: Could not get directory contents", err)
@@ -98,11 +98,9 @@ func NewTraversableDirectory(cwd string) TraversableDirectory {
 		}
 	}
 
-	fmt.Println(directoryContents)
-
 	directoryItem := NewFolder(filepath.Base(cwd), directoryContents)
 
-	return TraversableDirectory{
+	return &TraversableDirectory{
 		DirectoryItem:    directoryItem,
 		selectedElement:  "test",
 		currentDirectory: cwd,
