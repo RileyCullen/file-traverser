@@ -8,6 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// === Start of data model ===
+
 type DirectoryItemType string
 
 const (
@@ -36,6 +38,8 @@ func NewFile(name string) DirectoryItem {
 	}
 }
 
+// === End of data model ===
+
 // === Start of View Model ===
 
 type TraversableDirectory struct {
@@ -63,7 +67,9 @@ func (dirModel *TraversableDirectory) View() string {
 	return view
 }
 
-func (dirModel *TraversableDirectory) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (dirModel *TraversableDirectory) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -107,7 +113,9 @@ func NewTraversableDirectory(cwd string) *TraversableDirectory {
 	}
 }
 
-// == End of View Model ===
+// === End of View Model ===
+
+// === Start of main ===
 
 func main() {
 	cwd, err := os.Getwd()
@@ -123,3 +131,5 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+// === End of main ===
