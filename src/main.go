@@ -18,21 +18,19 @@ const (
 )
 
 type DirectoryItem struct {
-	contents []DirectoryItem
 	name     string
 	itemType DirectoryItemType
 }
 
-func NewFolder(name string, contents []DirectoryItem) DirectoryItem {
-	return DirectoryItem{
+func NewFolder(name string, contents []DirectoryItem) *DirectoryItem {
+	return &DirectoryItem{
 		itemType: Folder,
 		name:     name,
-		contents: contents,
 	}
 }
 
-func NewFile(name string) DirectoryItem {
-	return DirectoryItem{
+func NewFile(name string) *DirectoryItem {
+	return &DirectoryItem{
 		itemType: File,
 		name:     name,
 	}
@@ -43,9 +41,11 @@ func NewFile(name string) DirectoryItem {
 // === Start of View Model ===
 
 type TraversableDirectory struct {
-	DirectoryItem
-	selectedElement  string
-	currentDirectory string
+	contents []DirectoryItem
+	// Lists the present working directory (pwd).
+	pwd string
+	// Denotes selected item in current directory.
+	itemIndex int
 }
 
 func (dirModel *TraversableDirectory) Init() tea.Cmd {
@@ -53,15 +53,24 @@ func (dirModel *TraversableDirectory) Init() tea.Cmd {
 }
 
 func (dirModel *TraversableDirectory) View() string {
-	view := fmt.Sprintf("Current Directory: %s\n\n", dirModel.currentDirectory)
+	view := fmt.Sprintf("Current Directory: %s\n\n", dirModel.pwd)
 
 	// only print current directory for now
-	for _, dirItem := range dirModel.contents {
-		if dirItem.itemType == File {
-			view += fmt.Sprintf("%s\n", dirItem.name)
-		} else {
-			view += fmt.Sprintf("%s/\n", dirItem.name)
+	for index, dirItem := range dirModel.contents {
+		cursor := " "
+
+		if index == dirModel.itemIndex {
+			cursor = ">"
 		}
+
+		itemName := ""
+		if dirItem.itemType == File {
+			itemName = dirItem.name
+		} else {
+			itemName = fmt.Sprintf("%s/", dirItem.name)
+		}
+
+		view += fmt.Sprintf("%s %s\n", cursor, itemName)
 	}
 
 	return view
@@ -75,10 +84,84 @@ func (dirModel *TraversableDirectory) Update(
 		switch msg.String() {
 		case "q":
 			return dirModel, tea.Quit
+		case "j", "down":
+			if dirModel.itemIndex < len(dirModel.contents)-1 {
+				dirModel.itemIndex++
+			}
+		case "k", "up":
+			if dirModel.itemIndex > 0 {
+				dirModel.itemIndex--
+			}
+		case "h", "left":
+			parentDir := filepath.Dir(dirModel.pwd)
+			entries, err := os.ReadDir(parentDir)
+			if err != nil {
+				fmt.Println("Error: Could not read from new directory", err)
+				return dirModel, tea.Quit
+			}
+
+			dirModel.pwd = parentDir
+			dirModel.itemIndex = 0
+			dirModel.contents = convertDirEntriesToDirectoryItems(
+				entries,
+			)
+		case "l", "right":
+			if len(dirModel.contents) == 0 {
+				break
+			}
+
+			currentItem := dirModel.contents[dirModel.itemIndex]
+			if currentItem.itemType != Folder {
+				break
+			}
+
+			newPath := filepath.Join(dirModel.pwd, currentItem.name)
+			entries, err := os.ReadDir(newPath)
+			if err != nil {
+				fmt.Println("Error: Could not read from new directory", err)
+				return dirModel, tea.Quit
+			}
+
+			dirModel.pwd = newPath
+			dirModel.contents = convertDirEntriesToDirectoryItems(
+				entries,
+			)
+			dirModel.itemIndex = 0
+		case "o":
+			if len(dirModel.contents) == 0 {
+				break
+			}
+
+			// TODO: Change this to match your name
+			lastDirFile := os.Getenv("SPF_LAST_DIR")
+			if lastDirFile != "" {
+				os.WriteFile(lastDirFile, []byte(fmt.Sprintf("cd %s\n", dirModel.pwd)), 0755)
+			}
+			return dirModel, tea.Quit
 		}
 	}
 
 	return dirModel, nil
+}
+
+func convertDirEntriesToDirectoryItems(
+	rawDirectoryContents []os.DirEntry,
+) []DirectoryItem {
+	directoryContents := []DirectoryItem{}
+	for _, content := range rawDirectoryContents {
+		if content.IsDir() {
+			directoryContents = append(
+				directoryContents,
+				*NewFolder(content.Name(), []DirectoryItem{}),
+			)
+		} else {
+			directoryContents = append(
+				directoryContents,
+				*NewFile(content.Name()),
+			)
+		}
+	}
+	return directoryContents
 }
 
 func NewTraversableDirectory(cwd string) *TraversableDirectory {
@@ -88,28 +171,14 @@ func NewTraversableDirectory(cwd string) *TraversableDirectory {
 		os.Exit(1)
 	}
 
-	// convert directory contents into DirectoryItems
-	directoryContents := []DirectoryItem{}
-	for _, content := range rawDirectoryContents {
-		if content.IsDir() {
-			directoryContents = append(
-				directoryContents,
-				NewFolder(content.Name(), []DirectoryItem{}),
-			)
-		} else {
-			directoryContents = append(
-				directoryContents,
-				NewFile(content.Name()),
-			)
-		}
-	}
-
-	directoryItem := NewFolder(filepath.Base(cwd), directoryContents)
+	directoryContents := convertDirEntriesToDirectoryItems(
+		rawDirectoryContents,
+	)
 
 	return &TraversableDirectory{
-		DirectoryItem:    directoryItem,
-		selectedElement:  "test",
-		currentDirectory: cwd,
+		contents:  directoryContents,
+		pwd:       cwd,
+		itemIndex: 0,
 	}
 }
 
@@ -119,6 +188,7 @@ func NewTraversableDirectory(cwd string) *TraversableDirectory {
 
 func main() {
 	cwd, err := os.Getwd()
+	fmt.Println(cwd)
 	if err != nil {
 		fmt.Println("Error: Could not get current working directory", err)
 		os.Exit(1)
