@@ -57,12 +57,6 @@ func (dirModel *TraversableDirectory) View() string {
 
 	// only print current directory for now
 	for index, dirItem := range dirModel.contents {
-		cursor := " "
-
-		if index == dirModel.itemIndex {
-			cursor = ">"
-		}
-
 		itemName := ""
 		if dirItem.itemType == File {
 			itemName = dirItem.name
@@ -70,7 +64,22 @@ func (dirModel *TraversableDirectory) View() string {
 			itemName = fmt.Sprintf("%s/", dirItem.name)
 		}
 
-		view += fmt.Sprintf("%s %s\n", cursor, itemName)
+		cursor := " "
+		underlineStart := ""
+		underlineEnd := ""
+		if index == dirModel.itemIndex {
+			cursor = ">"
+			underlineStart = "\033[1;4m"
+			underlineEnd = "\033[0m"
+		}
+		view += fmt.Sprintf(
+			"%d %s %s %s %s\n",
+			index+1,
+			cursor,
+			underlineStart,
+			itemName,
+			underlineEnd,
+		)
 	}
 
 	return view
@@ -132,10 +141,13 @@ func (dirModel *TraversableDirectory) Update(
 				break
 			}
 
-			// TODO: Change this to match your name
-			lastDirFile := os.Getenv("SPF_LAST_DIR")
+			lastDirFile := os.Getenv("FT_LAST_DIR")
 			if lastDirFile != "" {
-				os.WriteFile(lastDirFile, []byte(fmt.Sprintf("cd %s\n", dirModel.pwd)), 0755)
+				os.WriteFile(
+					lastDirFile,
+					[]byte(fmt.Sprintf("cd %s\n", dirModel.pwd)),
+					0755,
+				)
 			}
 			return dirModel, tea.Quit
 		}
