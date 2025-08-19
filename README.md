@@ -6,9 +6,9 @@ A command line tool for traversing files/folders
 
 Run `go mod -o ft ./src` from root.
 
-## Execute `cd` on `ft` exit
+## OS/Terminal Support
 
-Add the following to your .zshrc file:
+MacOS + zsh
 
 ## Installation
 
