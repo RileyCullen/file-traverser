@@ -57,11 +57,11 @@ func (dirModel *TraversableDirectory) View() string {
 
 	// only print current directory for now
 	for index, dirItem := range dirModel.contents {
-		itemName := ""
+		item := ""
 		if dirItem.itemType == File {
-			itemName = dirItem.name
+			item = fmt.Sprintf(" %s", dirItem.name)
 		} else {
-			itemName = fmt.Sprintf("%s/", dirItem.name)
+			item = fmt.Sprintf("\033[35m %s/\033[0m", dirItem.name)
 		}
 
 		cursor := " "
@@ -77,7 +77,7 @@ func (dirModel *TraversableDirectory) View() string {
 			index+1,
 			cursor,
 			underlineStart,
-			itemName,
+			item,
 			underlineEnd,
 		)
 	}
