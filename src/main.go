@@ -1,6 +1,7 @@
 package main
 
 import (
+	dm "file-traverser/src/directory-model"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,40 +9,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// === Start of data model ===
-
-type DirectoryItemType string
-
-const (
-	File   DirectoryItemType = "file"
-	Folder DirectoryItemType = "folder"
-)
-
-type DirectoryItem struct {
-	name     string
-	itemType DirectoryItemType
-}
-
-func NewFolder(name string, contents []DirectoryItem) *DirectoryItem {
-	return &DirectoryItem{
-		itemType: Folder,
-		name:     name,
-	}
-}
-
-func NewFile(name string) *DirectoryItem {
-	return &DirectoryItem{
-		itemType: File,
-		name:     name,
-	}
-}
-
-// === End of data model ===
-
 // === Start of View Model ===
 
 type TraversableDirectory struct {
-	contents []DirectoryItem
+	contents []dm.DirectoryItem
 	// Lists the present working directory (pwd).
 	pwd string
 	// Denotes selected item in current directory.
@@ -58,10 +29,10 @@ func (dirModel *TraversableDirectory) View() string {
 	// only print current directory for now
 	for index, dirItem := range dirModel.contents {
 		item := ""
-		if dirItem.itemType == File {
-			item = fmt.Sprintf(" %s", dirItem.name)
+		if dirItem.ItemType == dm.File {
+			item = fmt.Sprintf(" %s", dirItem.Name)
 		} else {
-			item = fmt.Sprintf("\033[35m %s/\033[0m", dirItem.name)
+			item = fmt.Sprintf("\033[35m %s/\033[0m", dirItem.Name)
 		}
 
 		cursor := " "
@@ -120,11 +91,11 @@ func (dirModel *TraversableDirectory) Update(
 			}
 
 			currentItem := dirModel.contents[dirModel.itemIndex]
-			if currentItem.itemType != Folder {
+			if currentItem.ItemType != dm.Folder {
 				break
 			}
 
-			newPath := filepath.Join(dirModel.pwd, currentItem.name)
+			newPath := filepath.Join(dirModel.pwd, currentItem.Name)
 			entries, err := os.ReadDir(newPath)
 			if err != nil {
 				fmt.Println("Error: Could not read from new directory", err)
@@ -158,18 +129,18 @@ func (dirModel *TraversableDirectory) Update(
 
 func convertDirEntriesToDirectoryItems(
 	rawDirectoryContents []os.DirEntry,
-) []DirectoryItem {
-	directoryContents := []DirectoryItem{}
+) []dm.DirectoryItem {
+	directoryContents := []dm.DirectoryItem{}
 	for _, content := range rawDirectoryContents {
 		if content.IsDir() {
 			directoryContents = append(
 				directoryContents,
-				*NewFolder(content.Name(), []DirectoryItem{}),
+				*dm.NewFolder(content.Name(), []dm.DirectoryItem{}),
 			)
 		} else {
 			directoryContents = append(
 				directoryContents,
-				*NewFile(content.Name()),
+				*dm.NewFile(content.Name()),
 			)
 		}
 	}
