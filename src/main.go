@@ -1,173 +1,12 @@
 package main
 
 import (
-	dm "file-traverser/src/directory-model"
+	td "file-traverser/src/traversable-directory"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-// === Start of View Model ===
-
-type TraversableDirectory struct {
-	contents []dm.DirectoryItem
-	// Lists the present working directory (pwd).
-	pwd string
-	// Denotes selected item in current directory.
-	itemIndex int
-}
-
-func (dirModel *TraversableDirectory) Init() tea.Cmd {
-	return nil
-}
-
-func (dirModel *TraversableDirectory) View() string {
-	view := fmt.Sprintf("Current Directory: %s\n\n", dirModel.pwd)
-
-	// only print current directory for now
-	for index, dirItem := range dirModel.contents {
-		item := ""
-		if dirItem.ItemType == dm.File {
-			item = fmt.Sprintf(" %s", dirItem.Name)
-		} else {
-			item = fmt.Sprintf("\033[35m %s/\033[0m", dirItem.Name)
-		}
-
-		cursor := " "
-		underlineStart := ""
-		underlineEnd := ""
-		if index == dirModel.itemIndex {
-			cursor = ">"
-			underlineStart = "\033[1;4m"
-			underlineEnd = "\033[0m"
-		}
-		view += fmt.Sprintf(
-			"%d %s %s %s %s\n",
-			index+1,
-			cursor,
-			underlineStart,
-			item,
-			underlineEnd,
-		)
-	}
-
-	return view
-}
-
-func (dirModel *TraversableDirectory) Update(
-	msg tea.Msg,
-) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q":
-			return dirModel, tea.Quit
-		case "j", "down":
-			if dirModel.itemIndex < len(dirModel.contents)-1 {
-				dirModel.itemIndex++
-			}
-		case "k", "up":
-			if dirModel.itemIndex > 0 {
-				dirModel.itemIndex--
-			}
-		case "h", "left":
-			parentDir := filepath.Dir(dirModel.pwd)
-			entries, err := os.ReadDir(parentDir)
-			if err != nil {
-				fmt.Println("Error: Could not read from new directory", err)
-				return dirModel, tea.Quit
-			}
-
-			dirModel.pwd = parentDir
-			dirModel.itemIndex = 0
-			dirModel.contents = convertDirEntriesToDirectoryItems(
-				entries,
-			)
-		case "l", "right":
-			if len(dirModel.contents) == 0 {
-				break
-			}
-
-			currentItem := dirModel.contents[dirModel.itemIndex]
-			if currentItem.ItemType != dm.Folder {
-				break
-			}
-
-			newPath := filepath.Join(dirModel.pwd, currentItem.Name)
-			entries, err := os.ReadDir(newPath)
-			if err != nil {
-				fmt.Println("Error: Could not read from new directory", err)
-				return dirModel, tea.Quit
-			}
-
-			dirModel.pwd = newPath
-			dirModel.contents = convertDirEntriesToDirectoryItems(
-				entries,
-			)
-			dirModel.itemIndex = 0
-		case "o":
-			if len(dirModel.contents) == 0 {
-				break
-			}
-
-			lastDirFile := os.Getenv("FT_LAST_DIR")
-			if lastDirFile != "" {
-				os.WriteFile(
-					lastDirFile,
-					[]byte(fmt.Sprintf("cd %s\n", dirModel.pwd)),
-					0755,
-				)
-			}
-			return dirModel, tea.Quit
-		}
-	}
-
-	return dirModel, nil
-}
-
-func convertDirEntriesToDirectoryItems(
-	rawDirectoryContents []os.DirEntry,
-) []dm.DirectoryItem {
-	directoryContents := []dm.DirectoryItem{}
-	for _, content := range rawDirectoryContents {
-		if content.IsDir() {
-			directoryContents = append(
-				directoryContents,
-				*dm.NewFolder(content.Name(), []dm.DirectoryItem{}),
-			)
-		} else {
-			directoryContents = append(
-				directoryContents,
-				*dm.NewFile(content.Name()),
-			)
-		}
-	}
-	return directoryContents
-}
-
-func NewTraversableDirectory(cwd string) *TraversableDirectory {
-	rawDirectoryContents, err := os.ReadDir(cwd)
-	if err != nil {
-		fmt.Println("Error: Could not get directory contents", err)
-		os.Exit(1)
-	}
-
-	directoryContents := convertDirEntriesToDirectoryItems(
-		rawDirectoryContents,
-	)
-
-	return &TraversableDirectory{
-		contents:  directoryContents,
-		pwd:       cwd,
-		itemIndex: 0,
-	}
-}
-
-// === End of View Model ===
-
-// === Start of main ===
 
 func main() {
 	cwd, err := os.Getwd()
@@ -177,12 +16,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	p := tea.NewProgram(NewTraversableDirectory(cwd))
+	p := tea.NewProgram(td.NewTraversableDirectory(cwd))
 
 	if err := p.Start(); err != nil {
 		fmt.Println("Error: Could not start program", err)
 		os.Exit(1)
 	}
 }
-
-// === End of main ===
