@@ -3,6 +3,7 @@ package traversabledirectory
 import (
 	dm "file-traverser/src/directory-model"
 	"fmt"
+	"strconv"
 )
 
 // View of terminal output given current dirModel state.
@@ -18,6 +19,8 @@ func displayPresentWorkingDirectory(dirModel *TraversableDirectory) string {
 
 func displayDirectoryContents(dirModel *TraversableDirectory) string {
 	directoryContents := ""
+	maxPadding := len(strconv.Itoa(len(dirModel.contents)))
+
 	for index, dirItem := range dirModel.contents {
 		item := getDisplayValueForCurrentItem(dirItem)
 
@@ -27,8 +30,8 @@ func displayDirectoryContents(dirModel *TraversableDirectory) string {
 		)
 
 		directoryContents += fmt.Sprintf(
-			"%d %s %s %s %s\n",
-			index+1,
+			"%s %s %s %s %s\n",
+			getLineNumber(index+1, maxPadding),
 			cursor,
 			formatStart,
 			item,
@@ -71,4 +74,13 @@ func getFormatForCurrentLine(
 		formatEnd = reset
 	}
 	return cursor, formatStart, formatEnd
+}
+
+func getLineNumber(number int, maxPadding int) string {
+	lineNumber := fmt.Sprintf("%d", number)
+	actualPadding := maxPadding - len(strconv.Itoa(number))
+	for range actualPadding {
+		lineNumber += " "
+	}
+	return lineNumber
 }

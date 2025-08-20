@@ -80,3 +80,6 @@ func (dirModel *TraversableDirectory) Update(
 
 	return dirModel, nil
 }
+
+func handleCdOnClose(dirModel *TraversableDirectory) {
+}
