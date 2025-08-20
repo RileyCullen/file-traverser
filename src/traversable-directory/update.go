@@ -34,10 +34,14 @@ func (dirModel *TraversableDirectory) Update(
 				return dirModel, tea.Quit
 			}
 
+			prevPwd := dirModel.pwd
 			dirModel.pwd = parentDir
-			dirModel.itemIndex = 0
 			dirModel.contents = convertDirEntriesToDirectoryItems(
 				entries,
+			)
+			dirModel.itemIndex = getDirectoryItemIndex(
+				filepath.Base(prevPwd),
+				dirModel,
 			)
 		case "l", "right":
 			if len(dirModel.contents) == 0 {
@@ -81,5 +85,11 @@ func (dirModel *TraversableDirectory) Update(
 	return dirModel, nil
 }
 
-func handleCdOnClose(dirModel *TraversableDirectory) {
+func getDirectoryItemIndex(name string, dirModel *TraversableDirectory) int {
+	for i, dirItem := range dirModel.contents {
+		if dirItem.Name == name {
+			return i
+		}
+	}
+	return 0
 }
