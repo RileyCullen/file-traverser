@@ -6,7 +6,9 @@ import (
 	"os"
 )
 
+// TraversableDirectory is a model for viewing a directory.
 type TraversableDirectory struct {
+	// Directory contents.
 	contents []dm.DirectoryItem
 	// Lists the present working directory (pwd).
 	pwd string
@@ -14,6 +16,7 @@ type TraversableDirectory struct {
 	itemIndex int
 }
 
+// NewTraversableDirectory initializes view model based on current directory.
 func NewTraversableDirectory(cwd string) *TraversableDirectory {
 	rawDirectoryContents, err := os.ReadDir(cwd)
 	if err != nil {
@@ -30,4 +33,24 @@ func NewTraversableDirectory(cwd string) *TraversableDirectory {
 		pwd:       cwd,
 		itemIndex: 0,
 	}
+}
+
+func convertDirEntriesToDirectoryItems(
+	rawDirectoryContents []os.DirEntry,
+) []dm.DirectoryItem {
+	directoryContents := []dm.DirectoryItem{}
+	for _, content := range rawDirectoryContents {
+		if content.IsDir() {
+			directoryContents = append(
+				directoryContents,
+				*dm.NewFolder(content.Name(), []dm.DirectoryItem{}),
+			)
+		} else {
+			directoryContents = append(
+				directoryContents,
+				*dm.NewFile(content.Name()),
+			)
+		}
+	}
+	return directoryContents
 }

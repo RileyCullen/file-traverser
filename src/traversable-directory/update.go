@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Update handles key inputs and updates the model accordingly.
 func (dirModel *TraversableDirectory) Update(
 	msg tea.Msg,
 ) (tea.Model, tea.Cmd) {
@@ -78,24 +79,4 @@ func (dirModel *TraversableDirectory) Update(
 	}
 
 	return dirModel, nil
-}
-
-func convertDirEntriesToDirectoryItems(
-	rawDirectoryContents []os.DirEntry,
-) []dm.DirectoryItem {
-	directoryContents := []dm.DirectoryItem{}
-	for _, content := range rawDirectoryContents {
-		if content.IsDir() {
-			directoryContents = append(
-				directoryContents,
-				*dm.NewFolder(content.Name(), []dm.DirectoryItem{}),
-			)
-		} else {
-			directoryContents = append(
-				directoryContents,
-				*dm.NewFile(content.Name()),
-			)
-		}
-	}
-	return directoryContents
 }
