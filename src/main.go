@@ -16,7 +16,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	p := tea.NewProgram(td.NewTraversableDirectory(cwd))
+	p := tea.NewProgram(td.NewViewModel(cwd))
 
 	if err := p.Start(); err != nil {
 		fmt.Println("Error: Could not start program", err)

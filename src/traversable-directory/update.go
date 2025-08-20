@@ -10,7 +10,7 @@ import (
 )
 
 // Update handles key inputs and updates the model accordingly.
-func (dirModel *TraversableDirectory) Update(
+func (dirModel *ViewModel) Update(
 	msg tea.Msg,
 ) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -85,7 +85,7 @@ func (dirModel *TraversableDirectory) Update(
 	return dirModel, nil
 }
 
-func getDirectoryItemIndex(name string, dirModel *TraversableDirectory) int {
+func getDirectoryItemIndex(name string, dirModel *ViewModel) int {
 	for i, dirItem := range dirModel.contents {
 		if dirItem.Name == name {
 			return i

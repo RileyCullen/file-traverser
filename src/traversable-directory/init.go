@@ -4,6 +4,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (dirModel *TraversableDirectory) Init() tea.Cmd {
+func (dirModel *ViewModel) Init() tea.Cmd {
 	return nil
 }

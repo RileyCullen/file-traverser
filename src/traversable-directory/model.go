@@ -6,18 +6,21 @@ import (
 	"os"
 )
 
-// TraversableDirectory is a model for viewing a directory.
-type TraversableDirectory struct {
+// ViewModel is a model for viewing a directory.
+type ViewModel struct {
 	// Directory contents.
 	contents []dm.DirectoryItem
 	// Lists the present working directory (pwd).
 	pwd string
 	// Denotes selected item in current directory.
 	itemIndex int
+	// Since tea only supports single character presses, to support :<num> and
+	// 10<j | k> operations, we need to store historical key strokes in memory.
+	keyBuffers []string
 }
 
-// NewTraversableDirectory initializes view model based on current directory.
-func NewTraversableDirectory(cwd string) *TraversableDirectory {
+// NewViewModel initializes view model based on current directory.
+func NewViewModel(cwd string) *ViewModel {
 	rawDirectoryContents, err := os.ReadDir(cwd)
 	if err != nil {
 		fmt.Println("Error: Could not get directory contents", err)
@@ -28,10 +31,11 @@ func NewTraversableDirectory(cwd string) *TraversableDirectory {
 		rawDirectoryContents,
 	)
 
-	return &TraversableDirectory{
-		contents:  directoryContents,
-		pwd:       cwd,
-		itemIndex: 0,
+	return &ViewModel{
+		contents:   directoryContents,
+		pwd:        cwd,
+		itemIndex:  0,
+		keyBuffers: []string{},
 	}
 }
 

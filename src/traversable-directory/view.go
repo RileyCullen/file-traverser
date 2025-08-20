@@ -7,17 +7,17 @@ import (
 )
 
 // View of terminal output given current dirModel state.
-func (dirModel *TraversableDirectory) View() string {
+func (dirModel *ViewModel) View() string {
 	view := displayPresentWorkingDirectory(dirModel)
 	view += displayDirectoryContents(dirModel)
 	return view
 }
 
-func displayPresentWorkingDirectory(dirModel *TraversableDirectory) string {
+func displayPresentWorkingDirectory(dirModel *ViewModel) string {
 	return fmt.Sprintf("Current Directory: %s\n\n", dirModel.pwd)
 }
 
-func displayDirectoryContents(dirModel *TraversableDirectory) string {
+func displayDirectoryContents(dirModel *ViewModel) string {
 	directoryContents := ""
 	maxPadding := len(strconv.Itoa(len(dirModel.contents)))
 
@@ -63,7 +63,7 @@ const boldUnderline = "\033[1;4m"
 
 func getFormatForCurrentLine(
 	index int,
-	dirModel *TraversableDirectory,
+	dirModel *ViewModel,
 ) (string, string, string) {
 	cursor := " "
 	formatStart := ""
