@@ -19,7 +19,15 @@ func (dirModel *ViewModel) View() string {
 			Foreground(lipgloss.Color("#FAFAFA")).
 			Background(lipgloss.Color("#7D56F4")).
 			Width(50).
-			Render(strings.Join(dirModel.textBufferAction.buffer, ""))
+			Render(
+				fmt.Sprintf(
+					"COMMAND: %s",
+					strings.Join(
+						dirModel.textBufferAction.buffer,
+						"",
+					),
+				),
+			)
 	}
 
 	return view
