@@ -4,12 +4,24 @@ import (
 	dm "file-traverser/src/directory-model"
 	"fmt"
 	"strconv"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 // View of terminal output given current dirModel state.
 func (dirModel *ViewModel) View() string {
 	view := displayPresentWorkingDirectory(dirModel)
 	view += displayDirectoryContents(dirModel)
+
+	if dirModel.textBufferAction.actionType != noop {
+		view += "\n" + lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#7D56F4")).
+			Width(50).
+			Render(strings.Join(dirModel.textBufferAction.buffer, ""))
+	}
+
 	return view
 }
 

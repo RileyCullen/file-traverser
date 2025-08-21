@@ -16,7 +16,7 @@ type ViewModel struct {
 	itemIndex int
 	// Since tea only supports single character presses, to support :<num> and
 	// 10<j | k> operations, we need to store historical key strokes in memory.
-	keyBuffers []string
+	textBufferAction textBufferAction
 }
 
 // NewViewModel initializes view model based on current directory.
@@ -32,10 +32,10 @@ func NewViewModel(cwd string) *ViewModel {
 	)
 
 	return &ViewModel{
-		contents:   directoryContents,
-		pwd:        cwd,
-		itemIndex:  0,
-		keyBuffers: []string{},
+		contents:         directoryContents,
+		pwd:              cwd,
+		itemIndex:        0,
+		textBufferAction: *newNoopTextBufferAction(),
 	}
 }
 
