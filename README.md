@@ -4,7 +4,7 @@ A command line tool for traversing files/folders
 
 ## Building
 
-Run `go mod -o ft ./src` from root.
+Run `go build -o ft ./src` from root.
 
 ## OS/Terminal Support
 
